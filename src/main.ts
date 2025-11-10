@@ -6,7 +6,6 @@ import { join } from 'path';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
-  
   app.useGlobalPipes(new ValidationPipe());
   
   // Servir archivos estáticos de la carpeta uploads

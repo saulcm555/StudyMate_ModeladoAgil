@@ -7,6 +7,7 @@ import { TasksModule } from './tasks/tasks.module';
 import { AlertsModule } from './alerts/alerts.module';
 import { AttachmentsModule } from './attachments/attachments.module';
 import { SupabaseModule } from './supabase/supabase.module'; // 🆕
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -32,7 +33,8 @@ import { SupabaseModule } from './supabase/supabase.module'; // 🆕
     TasksModule,
     AlertsModule,
     AttachmentsModule,
-    SupabaseModule, // 🆕 Agregar módulo de Supabase
+    SupabaseModule,
+    AuthModule, // 🆕 Agregar módulo de Supabase
   ],
 })
 export class AppModule {}
