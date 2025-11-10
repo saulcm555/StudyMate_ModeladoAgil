@@ -7,7 +7,8 @@ import {
   OneToMany,
 } from 'typeorm';
 import { Subject } from '../../subjects/entities/subject.entity';
-import { Alert } from 'src/alerts/entities/alert.entity';
+import { Alert } from '../../alerts/entities/alert.entity';
+import { Attachment } from '../../attachments/entities/attachment.entity';
 
 export enum TaskState {
   PENDING = 'pending', // Por hacer
@@ -62,4 +63,9 @@ export class Task {
 
   @OneToMany(() => Alert, (alert) => alert.task)
   alerts: Alert[];
+
+  @OneToMany(() => Attachment, (attachment) => attachment.task, {
+    cascade: true,
+  })
+  attachments: Attachment[];
 }

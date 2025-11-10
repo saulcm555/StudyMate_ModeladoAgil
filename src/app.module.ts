@@ -1,13 +1,21 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigModule } from '@nestjs/config'; // 🆕
 import { UsersModule } from './users/users.module';
 import { SubjectsModule } from './subjects/subjects.module';
 import { TasksModule } from './tasks/tasks.module';
-import { ScheduleModule } from '@nestjs/schedule';
 import { AlertsModule } from './alerts/alerts.module';
+import { AttachmentsModule } from './attachments/attachments.module';
+import { SupabaseModule } from './supabase/supabase.module'; // 🆕
 
 @Module({
   imports: [
+    // 🆕 Configurar variables de entorno
+    ConfigModule.forRoot({
+      isGlobal: true, // Hace que ConfigService esté disponible globalmente
+      envFilePath: '.env',
+    }),
+    
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: 'localhost',
@@ -16,15 +24,15 @@ import { AlertsModule } from './alerts/alerts.module';
       password: 'postgres',
       database: 'test',
       autoLoadEntities: true,
-      synchronize: true, 
+      synchronize: true,
     }),
+    
     UsersModule,
     SubjectsModule,
     TasksModule,
-    ScheduleModule.forRoot(),
-    AlertsModule
+    AlertsModule,
+    AttachmentsModule,
+    SupabaseModule, // 🆕 Agregar módulo de Supabase
   ],
-  controllers: [],
-  providers: [],
 })
 export class AppModule {}

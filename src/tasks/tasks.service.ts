@@ -4,16 +4,31 @@ import { Between, Repository } from 'typeorm';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { Task } from './entities/task.entity';
+import { Subject } from '../subjects/entities/subject.entity';
 
 @Injectable()
 export class TasksService {
   constructor(
     @InjectRepository(Task)
     private readonly taskRepository: Repository<Task>,
+    @InjectRepository(Subject)
+    private readonly subjectRepository: Repository<Subject>,
   ) {}
 
   async create(createTaskDto: CreateTaskDto): Promise<Task> {
-    const task = this.taskRepository.create(createTaskDto);
+    const subject = await this.subjectRepository.findOne({
+      where: { subjectId: createTaskDto.subjectId }
+    });
+
+    if (!subject) {
+      throw new NotFoundException(`Subject with ID ${createTaskDto.subjectId} not found`);
+    }
+
+    const task = this.taskRepository.create({
+      ...createTaskDto,
+      subject 
+    });
+
     return await this.taskRepository.save(task);
   }
 
