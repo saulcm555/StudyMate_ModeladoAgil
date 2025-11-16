@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsDateString, IsUUID, IsEnum, ValidatorConstraint, ValidatorConstraintInterface, Validate, ValidationArguments } from 'class-validator';
+import { IsString, IsNotEmpty, IsDateString, IsUUID, IsEnum, IsOptional, ValidatorConstraint, ValidatorConstraintInterface, Validate, ValidationArguments } from 'class-validator';
 import { TaskState, TaskPriority } from '../entities/task.entity';
 
 // Validador personalizado: fecha de entrega no puede ser anterior a fecha de inicio
@@ -21,7 +21,7 @@ export class IsAfterStartDate implements ValidatorConstraintInterface {
 export class IsNotPastDate implements ValidatorConstraintInterface {
   validate(date: Date) {
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // Resetear horas para comparar solo fechas
+    today.setHours(0, 0, 0, 0); 
     const inputDate = new Date(date);
     inputDate.setHours(0, 0, 0, 0);
     return inputDate >= today;
@@ -44,6 +44,10 @@ export class CreateTaskDto {
   @IsString()
   @IsNotEmpty()
   description: string;
+
+  @IsString()
+  @IsOptional()
+  notes?: string;
 
   @IsDateString()
   @IsNotEmpty()

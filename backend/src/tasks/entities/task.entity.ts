@@ -42,6 +42,9 @@ export class Task {
   description: string;
 
   @Column()
+  notes: string;
+
+  @Column()
   start_date: Date;
 
   @Column()
