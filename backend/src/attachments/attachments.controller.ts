@@ -25,66 +25,10 @@ import { ActiveUser } from '../auth/decorators/active-user.decorator';
 import type { UserPayload } from '../auth/interfaces/user.interface';
 
 @Controller('attachments')
-@UseGuards(AuthGuard) // 🔐 Proteger todo el controlador
+@UseGuards(AuthGuard) // Proteger todo el controlador
 export class AttachmentsController {
   constructor(private readonly attachmentsService: AttachmentsService) {}
-  //Enddpoint de subida de archivos
-  @Post('upload/:taskId')
-  @HttpCode(HttpStatus.CREATED)
-  @UseInterceptors(
-    FileInterceptor('file', {
-      storage: diskStorage({
-        destination: './uploads', // Carpeta destinada a guardar los archivos
-        filename: (_req, file, cb) => {
-          //Esto genera el nombre único para evitar conflictos entre archivos
-          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-          const ext = extname(file.originalname);
-          const filename = `${file.fieldname}-${uniqueSuffix}${ext}`;
-          cb(null, filename);
-        },
-      }),
-      limits: {
-        fileSize: 10 * 1024 * 1024, // 10MB máximo
-      },
-      fileFilter: (req, file, cb) => {
-        // Permite solo ciertos tipos de archivos
-        const allowedMimes = /jpeg|jpg|png|gif|pdf|doc|docx|txt|zip/;
-        const mimeValid = allowedMimes.test(file.mimetype);
-        const extValid = allowedMimes.test(extname(file.originalname).toLowerCase());
-        
-        if (mimeValid && extValid) {
-          cb(null, true);
-        } else {
-          cb(new BadRequestException('Invalid file type. Allowed: images, PDF, Word, TXT, ZIP'), false);
-        }
-      },
-    }),
-  )
-  async uploadFile(
-    @Param('taskId') taskId: string,
-    @UploadedFile() file: Express.Multer.File,
-    @ActiveUser() user: UserPayload, // 🔐 Usuario autenticado
-  ) {
-    if (!file) {
-      throw new BadRequestException('No file uploaded');
-    }
-
-    console.log(`User ${user.email} uploading file to task ${taskId}`);
-
-    // Crear el DTO con la información del archivo
-    const createAttachmentDto: CreateAttachmentDto = {
-      fileName: file.filename,
-      originalName: file.originalname,
-      fileUrl: `./uploads/${file.filename}`,
-      mimeType: file.mimetype,
-      fileSize: file.size,
-      taskId,
-    };
-
-    return await this.attachmentsService.create(createAttachmentDto);
-  }
-
-  // 🆕 Endpoint para subir archivos a SUPABASE (en la nube)
+  //Endpoint para subir archivos a SUPABASE (en la nube)
   @Post('upload/supabase/:taskId')
   @HttpCode(HttpStatus.CREATED)
   @UseInterceptors(
@@ -109,7 +53,7 @@ export class AttachmentsController {
   async uploadToSupabase(
     @Param('taskId') taskId: string,
     @UploadedFile() file: Express.Multer.File,
-    @ActiveUser() user: UserPayload, // 🔐 Usuario autenticado
+    @ActiveUser() user: UserPayload, //Usuario autenticado
   ) {
     if (!file) {
       throw new BadRequestException('No file uploaded');
@@ -121,7 +65,7 @@ export class AttachmentsController {
     return await this.attachmentsService.uploadToSupabase(file, taskId);
   }
 
-  // Endpoint original para crear attachment manualmente (sin archivo físico)
+  // Endpoint original para crear attachment manualmente
   @Post()
   @HttpCode(HttpStatus.CREATED)
   create(
