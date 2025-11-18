@@ -9,7 +9,11 @@ async function bootstrap() {
   
   // Habilitar CORS para permitir peticiones desde el frontend
   app.enableCors({
-    origin: ['http://localhost:5173', 'http://localhost:5174'], // Puertos de Vite/React
+    origin: [
+      'http://localhost:5173', 
+      'http://localhost:5174',
+      'https://*.run.app', // Para Cloud Run
+    ],
     credentials: true,
   });
   
@@ -20,6 +24,9 @@ async function bootstrap() {
     prefix: '/uploads',
   });
   
-  await app.listen(process.env.PORT ?? 3007);
+  // Cloud Run usa PORT 8080, local usa 3007
+  const port = process.env.PORT || 3007;
+  await app.listen(port);
+  console.log(`🚀 Application running on port ${port}`);
 }
 void bootstrap();

@@ -14,7 +14,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Calendar } from "@/components/ui/calendar";
 import { useState } from "react";
 import { AlertCircle, Calendar as CalendarIcon, Clock, Filter } from "lucide-react";
 import { useTasks } from "@/hooks/useTasks";
@@ -54,9 +53,6 @@ export default function CalendarPage() {
   const upcomingTasks = filteredTasks
     .sort((a, b) => new Date(a.delivery_date).getTime() - new Date(b.delivery_date).getTime())
     .slice(0, 8);
-
-  // Fechas con tareas (para destacar en el calendario)
-  const datesWithTasks = filteredTasks.map((task) => new Date(task.delivery_date));
 
   const priorityVariant: Record<string, "destructive" | "default" | "secondary"> = {
     [TaskPriorityEnum.URGENT]: "destructive",
@@ -127,68 +123,62 @@ export default function CalendarPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Tareas del día seleccionado */}
         <Card className="lg:col-span-2 border-0 shadow-md">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CalendarIcon className="w-5 h-5 text-primary" />
-              Calendario
+            <CardTitle className="flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                <CalendarIcon className="w-5 h-5 text-primary" />
+                Tareas del día
+              </span>
+              <div className="flex items-center gap-2">
+                <CalendarIcon className="w-4 h-4 text-muted-foreground" />
+                <input
+                  type="date"
+                  value={date ? format(date, "yyyy-MM-dd") : ""}
+                  onChange={(e) => setDate(e.target.value ? new Date(e.target.value) : undefined)}
+                  className="px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-6 pt-0">
-            <Calendar
-              mode="single"
-              selected={date}
-              onSelect={setDate}
-              className="rounded-md border shadow-sm"
-              modifiers={{
-                hasTask: datesWithTasks,
-              }}
-              modifiersStyles={{
-                hasTask: {
-                  fontWeight: "bold",
-                  textDecoration: "underline",
-                  color: "hsl(var(--primary))",
-                },
-              }}
-            />
-          </CardContent>
-
-          {/* Tareas del día seleccionado */}
-          {date && (
-            <CardContent className="pt-0">
-              <div className="space-y-3">
-                <h3 className="font-semibold text-lg">
-                  {format(date, "EEEE, MMMM d")}
-                </h3>
-                {tasksForSelectedDate.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No hay tareas para este día</p>
-                ) : (
-                  <div className="space-y-2">
-                    {tasksForSelectedDate.map((task) => (
-                      <div
-                        key={task.task_id}
-                        onClick={() => handleTaskClick(task)}
-                        className="flex items-center justify-between p-3 rounded-lg bg-muted cursor-pointer hover:bg-muted/80 transition-colors"
-                      >
-                        <div className="flex items-center gap-3">
-                          {task.subject && (
-                            <div
-                              className="w-3 h-3 rounded-full"
-                              style={{ backgroundColor: task.subject.color }}
-                            />
-                          )}
-                          <span className="font-medium">{task.title}</span>
+          <CardContent className="pt-0">
+            <div className="space-y-3">
+              {tasksForSelectedDate.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <CalendarIcon className="w-16 h-16 mx-auto mb-4 opacity-30" />
+                  <p className="text-lg font-medium">No hay tareas para este día</p>
+                  <p className="text-sm mt-1">Selecciona otra fecha para ver las tareas</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {tasksForSelectedDate.map((task) => (
+                    <div
+                      key={task.task_id}
+                      onClick={() => handleTaskClick(task)}
+                      className="flex items-center justify-between p-4 rounded-lg bg-muted cursor-pointer hover:bg-muted/80 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        {task.subject && (
+                          <div
+                            className="w-3 h-3 rounded-full"
+                            style={{ backgroundColor: task.subject.color }}
+                          />
+                        )}
+                        <div>
+                          <p className="font-medium">{task.title}</p>
+                          <p className="text-sm text-muted-foreground">{task.subject?.name}</p>
                         </div>
-                        <Badge variant={priorityVariant[task.priority]}>
-                          {priorityLabels[task.priority]}
-                        </Badge>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          )}
+                      <Badge variant={priorityVariant[task.priority]}>
+                        {priorityLabels[task.priority]}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </CardContent>
         </Card>
 
         <Card className="border-0 shadow-md">
@@ -303,6 +293,7 @@ export default function CalendarPage() {
           )}
         </DialogContent>
       </Dialog>
+
     </div>
   );
 }
