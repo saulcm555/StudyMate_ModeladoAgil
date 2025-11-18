@@ -41,6 +41,9 @@ export class Task {
   @Column()
   description: string;
 
+  @Column({ nullable: true })
+  notes: string;
+
   @Column()
   start_date: Date;
 
