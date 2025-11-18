@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ConfigModule } from '@nestjs/config'; // 🆕
 import { UsersModule } from './users/users.module';
 import { SubjectsModule } from './subjects/subjects.module';
 import { TasksModule } from './tasks/tasks.module';
@@ -9,26 +8,21 @@ import { AttachmentsModule } from './attachments/attachments.module';
 import { SupabaseModule } from './supabase/supabase.module'; // 🆕
 import { AuthModule } from './auth/auth.module';
 import { PromodoroModule } from './pomodoro/pomodoro.module'; // 🆕
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
-    // 🆕 Configurar variables de entorno
     ConfigModule.forRoot({
-      isGlobal: true, // Hace que ConfigService esté disponible globalmente
-      envFilePath: '.env',
+      isGlobal: true,
+      envFilePath: `.env`,
     }),
-    
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: 'localhost',
-      port: 5434,
-      username: 'postgres',
-      password: 'postgres',
-      database: 'test',
+      url: process.env.DATABASE_URL,
       autoLoadEntities: true,
-      synchronize: true,
+      synchronize: true, // o false según tu caso
+      ssl: { rejectUnauthorized: false },
     }),
-    
     UsersModule,
     SubjectsModule,
     TasksModule,
@@ -36,7 +30,7 @@ import { PromodoroModule } from './pomodoro/pomodoro.module'; // 🆕
     AttachmentsModule,
     SupabaseModule,
     AuthModule,
-    PromodoroModule, // 🆕 Módulo Pomodoro
+    PromodoroModule,
   ],
 })
 export class AppModule {}
