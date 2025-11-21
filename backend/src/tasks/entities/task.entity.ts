@@ -21,7 +21,6 @@ export enum TaskPriority {
   LOW = 'low', // Baja
   MEDIUM = 'medium', // Media
   HIGH = 'high', // Alta
-  URGENT = 'urgent', // Urgente
 }
 
 @Entity('tasks')

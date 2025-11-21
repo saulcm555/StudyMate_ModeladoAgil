@@ -50,7 +50,7 @@ export const useAuth = () => {
     localStorage.removeItem('access_token');
     localStorage.removeItem('user');
     setUser(null);
-    navigate('/login');
+    navigate('/index');
   };
 
   return { user, loading, logout };

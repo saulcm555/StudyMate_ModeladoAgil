@@ -101,17 +101,15 @@ export default function Tasks() {
   });
 
   const priorityColors: Record<string, string> = {
-    [TaskPriorityEnum.LOW]: "secondary",
-    [TaskPriorityEnum.MEDIUM]: "default",
-    [TaskPriorityEnum.HIGH]: "default",
-    [TaskPriorityEnum.URGENT]: "destructive",
+    [TaskPriorityEnum.LOW]: \"#10b981\",
+    [TaskPriorityEnum.MEDIUM]: \"#f59e0b\",
+    [TaskPriorityEnum.HIGH]: \"#ef4444\",
   };
 
   const priorityLabels: Record<string, string> = {
-    [TaskPriorityEnum.LOW]: "Baja",
-    [TaskPriorityEnum.MEDIUM]: "Media",
-    [TaskPriorityEnum.HIGH]: "Alta",
-    [TaskPriorityEnum.URGENT]: "Urgente",
+    [TaskPriorityEnum.LOW]: \"Baja\",
+    [TaskPriorityEnum.MEDIUM]: \"Media\",
+    [TaskPriorityEnum.HIGH]: \"Alta\",
   };
 
   const stateLabels: Record<TaskState, string> = {
@@ -148,7 +146,14 @@ export default function Tasks() {
                   {task.title}
                 </h3>
                 <div className="flex items-center gap-1">
-                  <Badge variant={priorityColors[task.priority] as any}>
+                  <Badge 
+                    variant="outline"
+                    style={{ 
+                      backgroundColor: `${priorityColors[task.priority]}15`,
+                      borderColor: priorityColors[task.priority],
+                      color: priorityColors[task.priority]
+                    }}
+                  >
                     {priorityLabels[task.priority]}
                   </Badge>
                   <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">

@@ -57,7 +57,7 @@ export function TaskForm({ open, onOpenChange, onSubmit, task, isLoading }: Task
   const selectedState = watch("state");
 
   useEffect(() => {
-    if (task) {
+    if (open && task) {
       reset({
         title: task.title,
         description: task.description,
@@ -67,7 +67,7 @@ export function TaskForm({ open, onOpenChange, onSubmit, task, isLoading }: Task
         priority: task.priority,
         state: task.state,
       });
-    } else {
+    } else if (open && !task) {
       reset({
         title: "",
         description: "",
@@ -78,17 +78,16 @@ export function TaskForm({ open, onOpenChange, onSubmit, task, isLoading }: Task
         state: TaskStateEnum.PENDING,
       });
     }
-  }, [task, reset]);
+  }, [open, task, reset]);
 
   const handleFormSubmit = (data: CreateTaskDto) => {
     onSubmit(data);
   };
 
-  const priorityLabels: Record<TaskPriority, string> = {
-    [TaskPriorityEnum.LOW]: "Baja",
-    [TaskPriorityEnum.MEDIUM]: "Media",
-    [TaskPriorityEnum.HIGH]: "Alta",
-    [TaskPriorityEnum.URGENT]: "Urgente",
+  const priorityLabels: Record<TaskPriority, { label: string; color: string }> = {
+    [TaskPriorityEnum.LOW]: { label: "Baja", color: "#10b981" },
+    [TaskPriorityEnum.MEDIUM]: { label: "Media", color: "#f59e0b" },
+    [TaskPriorityEnum.HIGH]: { label: "Alta", color: "#ef4444" },
   };
 
   const stateLabels: Record<TaskState, string> = {
@@ -216,9 +215,15 @@ export function TaskForm({ open, onOpenChange, onSubmit, task, isLoading }: Task
                   <SelectValue placeholder="Selecciona prioridad" />
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.entries(priorityLabels).map(([value, label]) => (
+                  {Object.entries(priorityLabels).map(([value, { label, color }]) => (
                     <SelectItem key={value} value={value}>
-                      {label}
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-3 h-3 rounded-full"
+                          style={{ backgroundColor: color }}
+                        />
+                        {label}
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
