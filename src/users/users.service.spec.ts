@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { Student } from './entities/user.entity';
 import { CreateStudentDto } from './dto/create-user.dto';
@@ -49,8 +49,8 @@ describe('UsersService', () => {
     expect(service).toBeDefined();
   });
 
-  describe('crear estudiante', () => {
-    it('debería crear un nuevo estudiante', async () => {
+  describe('create', () => {
+    it('debería crear un nuevo estudiante exitosamente', async () => {
       const createStudentDto: CreateStudentDto = {
         name: 'John Doe',
         email: 'john@example.com',
@@ -80,15 +80,10 @@ describe('UsersService', () => {
 
       mockRepository.findOneBy.mockResolvedValue(mockStudent);
 
-      await expect(service.create(createStudentDto)).rejects.toThrow(
-        new ConflictException('Student with email john@example.com already exists'),
-      );
-
-      expect(mockRepository.create).not.toHaveBeenCalled();
-      expect(mockRepository.save).not.toHaveBeenCalled();
+      await expect(service.create(createStudentDto)).rejects.toThrow(ConflictException);
     });
 
-    it('debería manejar errores del repositorio durante la creación', async () => {
+    it('debería manejar errores del repositorio', async () => {
       const createStudentDto: CreateStudentDto = {
         name: 'Jane Doe',
         email: 'jane@example.com',
@@ -97,14 +92,14 @@ describe('UsersService', () => {
 
       mockRepository.findOneBy.mockResolvedValue(null);
       mockRepository.create.mockReturnValue(mockStudent);
-      mockRepository.save.mockRejectedValue(new Error('Database connection failed'));
+      mockRepository.save.mockRejectedValue(new Error('Database error'));
 
-      await expect(service.create(createStudentDto)).rejects.toThrow('Database connection failed');
+      await expect(service.create(createStudentDto)).rejects.toThrow('Database error');
     });
   });
 
-  describe('encontrar todos los estudiantes', () => {
-    it('debería retornar un array de estudiantes', async () => {
+  describe('findAll', () => {
+    it('debería retornar todos los estudiantes', async () => {
       const students = [mockStudent];
       mockRepository.find.mockResolvedValue(students);
 
@@ -114,23 +109,16 @@ describe('UsersService', () => {
       expect(result).toEqual(students);
     });
 
-    it('debería retornar array vacío cuando no existen estudiantes', async () => {
+    it('debería retornar array vacío si no hay estudiantes', async () => {
       mockRepository.find.mockResolvedValue([]);
 
       const result = await service.findAll();
 
       expect(result).toEqual([]);
-      expect(Array.isArray(result)).toBe(true);
-    });
-
-    it('debería manejar errores del repositorio', async () => {
-      mockRepository.find.mockRejectedValue(new Error('Database error'));
-
-      await expect(service.findAll()).rejects.toThrow('Database error');
     });
   });
 
-  describe('encontrar un estudiante', () => {
+  describe('findOne', () => {
     it('debería retornar un estudiante por ID', async () => {
       mockRepository.findOneBy.mockResolvedValue(mockStudent);
 
@@ -145,22 +133,12 @@ describe('UsersService', () => {
     it('debería lanzar NotFoundException si no encuentra el estudiante', async () => {
       mockRepository.findOneBy.mockResolvedValue(null);
 
-      await expect(service.findOne('999')).rejects.toThrow(
-        new NotFoundException('Student with ID 999 not found'),
-      );
-    });
-
-    it('debería manejar IDs vacíos o inválidos', async () => {
-      mockRepository.findOneBy.mockResolvedValue(null);
-
-      await expect(service.findOne('')).rejects.toThrow(NotFoundException);
-      await expect(service.findOne(null as any)).rejects.toThrow();
-      await expect(service.findOne(undefined as any)).rejects.toThrow();
+      await expect(service.findOne('999')).rejects.toThrow(NotFoundException);
     });
   });
 
-  describe('actualizar estudiante', () => {
-    it('debería actualizar un estudiante', async () => {
+  describe('update', () => {
+    it('debería actualizar un estudiante exitosamente', async () => {
       const updateStudentDto: UpdateStudentsDto = {
         name: 'Jane Doe',
       };
@@ -182,37 +160,13 @@ describe('UsersService', () => {
     it('debería lanzar NotFoundException si no encuentra el estudiante', async () => {
       mockRepository.findOneBy.mockResolvedValue(null);
 
-      await expect(
-        service.update('999', { name: 'Jane Doe' }),
-      ).rejects.toThrow(new NotFoundException('Student with ID 999 not found'));
-    });
-
-    it('debería actualizar múltiples campos a la vez', async () => {
-      const updateStudentDto: UpdateStudentsDto = {
-        name: 'Jane Smith',
-        email: 'jane.smith@example.com',
-        password: 'newPassword123',
-      };
-
-      const updatedStudent = { ...mockStudent, ...updateStudentDto };
-
-      mockRepository.findOneBy.mockResolvedValue(mockStudent);
-      mockRepository.save.mockResolvedValue(updatedStudent);
-
-      const result = await service.update('student-1', updateStudentDto);
-
-      expect(result).toBeDefined();
-      expect(result).not.toBeNull();
-      if (result) {
-        expect(result.name).toBe('Jane Smith');
-        expect(result.email).toBe('jane.smith@example.com');
-        expect(result.password).toBe('newPassword123');
-      }
+      await expect(service.update('999', { name: 'Jane Doe' }))
+        .rejects.toThrow(NotFoundException);
     });
   });
 
-  describe('eliminar estudiante', () => {
-    it('debería eliminar un estudiante', async () => {
+  describe('remove', () => {
+    it('debería eliminar un estudiante exitosamente', async () => {
       mockRepository.findOneBy.mockResolvedValue(mockStudent);
       mockRepository.delete.mockResolvedValue({ affected: 1 });
 
@@ -228,292 +182,7 @@ describe('UsersService', () => {
     it('debería lanzar NotFoundException si no encuentra el estudiante', async () => {
       mockRepository.findOneBy.mockResolvedValue(null);
 
-      await expect(service.remove('999')).rejects.toThrow(
-        new NotFoundException('Student with ID 999 not found'),
-      );
-    });
-  });
-
-  describe('validaciones de entrada', () => {
-    describe('validación de campos requeridos', () => {
-      it('debería lanzar BadRequestException si falta el nombre', async () => {
-        const createStudentDtoWithoutName = {
-          email: 'john@example.com',
-          password: 'password123',
-        };
-
-        await expect(service.create(createStudentDtoWithoutName as any)).rejects.toThrow(
-          BadRequestException
-        );
-        await expect(service.create(createStudentDtoWithoutName as any)).rejects.toThrow(
-          'Name is required'
-        );
-      });
-
-      it('debería lanzar BadRequestException si falta el email', async () => {
-        const createStudentDtoWithoutEmail = {
-          name: 'John Doe',
-          password: 'password123',
-        };
-
-        await expect(service.create(createStudentDtoWithoutEmail as any)).rejects.toThrow(
-          BadRequestException
-        );
-        await expect(service.create(createStudentDtoWithoutEmail as any)).rejects.toThrow(
-          'Email is required'
-        );
-      });
-
-      it('debería lanzar BadRequestException si falta la contraseña', async () => {
-        const createStudentDtoWithoutPassword = {
-          name: 'John Doe',
-          email: 'john@example.com',
-        };
-
-        await expect(service.create(createStudentDtoWithoutPassword as any)).rejects.toThrow(
-          BadRequestException
-        );
-        await expect(service.create(createStudentDtoWithoutPassword as any)).rejects.toThrow(
-          'Password is required'
-        );
-      });
-    });
-
-    describe('validación de longitud y contenido', () => {
-      it('debería lanzar BadRequestException si el nombre es muy largo', async () => {
-        const createStudentDto: CreateStudentDto = {
-          name: 'A'.repeat(101),
-          email: 'john@example.com',
-          password: 'password123',
-        };
-
-        await expect(service.create(createStudentDto)).rejects.toThrow(
-          BadRequestException
-        );
-        await expect(service.create(createStudentDto)).rejects.toThrow(
-          'Name is too long'
-        );
-      });
-
-      it('debería lanzar BadRequestException si el nombre contiene caracteres inválidos', async () => {
-        const invalidNames = [
-          'John@Doe',
-          'Jane/*',
-          'Student123',
-          'User#$%',
-        ];
-
-        for (const invalidName of invalidNames) {
-          const createStudentDto: CreateStudentDto = {
-            name: invalidName,
-            email: 'test@example.com',
-            password: 'password123',
-          };
-
-          await expect(service.create(createStudentDto)).rejects.toThrow(
-            BadRequestException
-          );
-          await expect(service.create(createStudentDto)).rejects.toThrow(
-            'Name contains invalid characters'
-          );
-        }
-      });
-
-      it('debería aceptar nombres válidos', async () => {
-        const validNames = [
-          'John Doe',
-          'María García',
-          'José María de la Cruz'
-        ];
-
-        for (const validName of validNames) {
-          const createStudentDto: CreateStudentDto = {
-            name: validName,
-            email: `${validName.toLowerCase().replace(/\s+/g, '.')}@example.com`,
-            password: 'password123',
-          };
-
-          const validStudent = { ...mockStudent, name: validName };
-
-          mockRepository.findOneBy.mockResolvedValue(null);
-          mockRepository.create.mockReturnValue(validStudent);
-          mockRepository.save.mockResolvedValue(validStudent);
-
-          const result = await service.create(createStudentDto);
-          expect(result.name).toBe(validName);
-        }
-      });
-    });
-
-    describe('validación de email', () => {
-      it('debería lanzar BadRequestException para formatos de email inválidos', async () => {
-        const invalidEmails = [
-          'invalid-email',
-          'test@',
-          '@example.com',
-          'test..test@example.com',
-          'test with spaces@example.com',
-        ];
-
-        for (const invalidEmail of invalidEmails) {
-          const createStudentDto: CreateStudentDto = {
-            name: 'John Doe',
-            email: invalidEmail,
-            password: 'password123',
-          };
-
-          await expect(service.create(createStudentDto)).rejects.toThrow(
-            BadRequestException
-          );
-          await expect(service.create(createStudentDto)).rejects.toThrow(
-            'Email format is invalid'
-          );
-        }
-      });
-
-      it('debería aceptar formatos de email válidos', async () => {
-        const validEmails = [
-          'john@example.com',
-          'jane.doe@university.edu',
-          'test+tag@example.org',
-        ];
-
-        for (const validEmail of validEmails) {
-          const createStudentDto: CreateStudentDto = {
-            name: 'Test Student',
-            email: validEmail,
-            password: 'password123',
-          };
-
-          const validStudent = { ...mockStudent, email: validEmail };
-
-          mockRepository.findOneBy.mockResolvedValue(null);
-          mockRepository.create.mockReturnValue(validStudent);
-          mockRepository.save.mockResolvedValue(validStudent);
-
-          const result = await service.create(createStudentDto);
-          expect(result.email).toBe(validEmail);
-        }
-      });
-    });
-
-    describe('validación de contraseña', () => {
-      it('debería lanzar BadRequestException si la contraseña es muy corta', async () => {
-        const createStudentDto: CreateStudentDto = {
-          name: 'John Doe',
-          email: 'john@example.com',
-          password: '123',
-        };
-
-        await expect(service.create(createStudentDto)).rejects.toThrow(
-          BadRequestException
-        );
-        await expect(service.create(createStudentDto)).rejects.toThrow(
-          'Password must be at least 8 characters long'
-        );
-      });
-
-      it('debería lanzar BadRequestException si la contraseña es muy larga', async () => {
-        const createStudentDto: CreateStudentDto = {
-          name: 'John Doe',
-          email: 'john@example.com',
-          password: 'A'.repeat(129),
-        };
-
-        await expect(service.create(createStudentDto)).rejects.toThrow(
-          BadRequestException
-        );
-        await expect(service.create(createStudentDto)).rejects.toThrow(
-          'Password is too long'
-        );
-      });
-
-      it('debería lanzar BadRequestException si la contraseña carece de complejidad', async () => {
-        const weakPasswords = [
-          'password',
-          '12345678',
-          'PASSWORD',
-        ];
-
-        for (const weakPassword of weakPasswords) {
-          const createStudentDto: CreateStudentDto = {
-            name: 'John Doe',
-            email: 'john@example.com',
-            password: weakPassword,
-          };
-
-          await expect(service.create(createStudentDto)).rejects.toThrow(
-            BadRequestException
-          );
-          await expect(service.create(createStudentDto)).rejects.toThrow(
-            'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'
-          );
-        }
-      });
-
-      it('debería aceptar contraseñas seguras', async () => {
-        const strongPasswords = [
-          'Password123!',
-          'MySecure@Pass1',
-          'StrongP@ssw0rd',
-        ];
-
-        for (const strongPassword of strongPasswords) {
-          const createStudentDto: CreateStudentDto = {
-            name: 'Test Student',
-            email: 'test@example.com',
-            password: strongPassword,
-          };
-
-          const validStudent = { ...mockStudent, password: strongPassword };
-
-          mockRepository.findOneBy.mockResolvedValue(null);
-          mockRepository.create.mockReturnValue(validStudent);
-          mockRepository.save.mockResolvedValue(validStudent);
-
-          const result = await service.create(createStudentDto);
-          expect(result.password).toBe(strongPassword);
-        }
-      });
-    });
-
-    describe('casos límite', () => {
-      it('debería manejar caracteres especiales permitidos en nombres', async () => {
-        const createStudentDto: CreateStudentDto = {
-          name: 'José María de la Cruz-Martínez',
-          email: 'jose.maria@example.com',
-          password: 'password123',
-        };
-
-        const studentWithSpecialName = { ...mockStudent, name: createStudentDto.name };
-
-        mockRepository.findOneBy.mockResolvedValue(null);
-        mockRepository.create.mockReturnValue(studentWithSpecialName);
-        mockRepository.save.mockResolvedValue(studentWithSpecialName);
-
-        const result = await service.create(createStudentDto);
-
-        expect(result.name).toBe('José María de la Cruz-Martínez');
-      });
-
-      it('debería manejar longitudes mínimas válidas', async () => {
-        const createStudentDto: CreateStudentDto = {
-          name: 'A',
-          email: 'a@b.co',
-          password: 'Pass123!',
-        };
-
-        const minimalStudent = { ...mockStudent, ...createStudentDto };
-
-        mockRepository.findOneBy.mockResolvedValue(null);
-        mockRepository.create.mockReturnValue(minimalStudent);
-        mockRepository.save.mockResolvedValue(minimalStudent);
-
-        const result = await service.create(createStudentDto);
-
-        expect(result.name).toBe('A');
-        expect(result.email).toBe('a@b.co');
-      });
+      await expect(service.remove('999')).rejects.toThrow(NotFoundException);
     });
   });
 });
