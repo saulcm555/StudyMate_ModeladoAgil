@@ -82,11 +82,14 @@ export class TasksService {
   }
 
   async findByAlertRange(start: Date, end: Date) {
+    // Obtener todas las tareas que vencen en el rango, incluyendo su materia
+    // No filtramos por alertas aquí, eso se hace en el servicio de alertas
     return await this.taskRepository
       .createQueryBuilder('task')
-      .leftJoinAndSelect('task.alerts', 'alert')
+      .leftJoinAndSelect('task.subject', 'subject')
       .where('task.delivery_date BETWEEN :start AND :end', { start, end })
-      .andWhere('alert.alertId IS NULL') // tareas sin notificaciones
+      .andWhere('task.state != :completed', { completed: 'completed' })
+      .andWhere('task.state != :cancelled', { cancelled: 'cancelled' })
       .getMany();
   }
   //   async findByAlertRange(start: Date, end: Date) {
