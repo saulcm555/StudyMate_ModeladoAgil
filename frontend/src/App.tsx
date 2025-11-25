@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Layout } from "./components/Layout";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { AdminRoute } from "./components/AdminRoute";
 import { PomodoroProvider } from "./contexts/PomodoroContext";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
@@ -14,6 +15,7 @@ import CalendarPage from "./pages/CalendarPage";
 import Pomodoro from "./pages/Pomodoro";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import AdminUsers from "./pages/AdminUsers";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -75,6 +77,16 @@ const App = () => (
               <ProtectedRoute>
                 <Layout><Pomodoro /></Layout>
               </ProtectedRoute>
+            } 
+          />
+          
+          {/* Rutas de administrador (requieren rol Admin) */}
+          <Route 
+            path="/admin/users" 
+            element={
+              <AdminRoute>
+                <Layout><AdminUsers /></Layout>
+              </AdminRoute>
             } 
           />
           

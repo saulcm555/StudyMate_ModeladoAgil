@@ -1,4 +1,10 @@
-import { Injectable, NotFoundException, BadRequestException, Inject, forwardRef } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  Inject,
+  forwardRef,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Between, Repository } from 'typeorm';
 import { CreateTaskDto } from './dto/create-task.dto';
@@ -7,7 +13,6 @@ import { Task } from './entities/task.entity';
 import { Subject } from '../subjects/entities/subject.entity';
 import { JwtPayload } from '@supabase/supabase-js';
 import { AlertsService } from '../alerts/alerts.service';
-
 
 @Injectable()
 export class TasksService {
@@ -23,24 +28,28 @@ export class TasksService {
 
   async create(createTaskDto: CreateTaskDto): Promise<Task> {
     const subject = await this.subjectRepository.findOne({
-      where: { subjectId: createTaskDto.subjectId }
+      where: { subjectId: createTaskDto.subjectId },
     });
 
     if (!subject) {
-      throw new NotFoundException(`Subject with ID ${createTaskDto.subjectId} not found`);
+      throw new NotFoundException(
+        `Subject with ID ${createTaskDto.subjectId} not found`,
+      );
     }
 
     // Validación adicional en el servicio
-    const startDate = typeof createTaskDto.start_date === 'string'
-      ? new Date(createTaskDto.start_date + 'T00:00:00')
-      : new Date(createTaskDto.start_date);
+    const startDate =
+      typeof createTaskDto.start_date === 'string'
+        ? new Date(createTaskDto.start_date + 'T00:00:00')
+        : new Date(createTaskDto.start_date);
     startDate.setHours(0, 0, 0, 0);
-    
-    const deliveryDate = typeof createTaskDto.delivery_date === 'string'
-      ? new Date(createTaskDto.delivery_date + 'T00:00:00')
-      : new Date(createTaskDto.delivery_date);
+
+    const deliveryDate =
+      typeof createTaskDto.delivery_date === 'string'
+        ? new Date(createTaskDto.delivery_date + 'T00:00:00')
+        : new Date(createTaskDto.delivery_date);
     deliveryDate.setHours(0, 0, 0, 0);
-    
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -49,17 +58,19 @@ export class TasksService {
     }
 
     if (deliveryDate < startDate) {
-      throw new BadRequestException('Delivery date must be equal to or after start date');
+      throw new BadRequestException(
+        'Delivery date must be equal to or after start date',
+      );
     }
 
     let task = this.taskRepository.create({
       ...createTaskDto,
       subjectId: createTaskDto.subjectId,
-      subject 
+      subject,
     });
 
     task = await this.taskRepository.save(task);
-    await this.alertsService.generateAlertForTask(task);
+    await this.alertsService.generateAlerts();
     return task;
   }
 
@@ -71,10 +82,18 @@ export class TasksService {
   }
 
   async findByAlertRange(start: Date, end: Date) {
-  return await this.taskRepository.find({
-    where: { delivery_date: Between(start, end) },
-  });
-}
+    return await this.taskRepository
+      .createQueryBuilder('task')
+      .leftJoinAndSelect('task.alerts', 'alert')
+      .where('task.delivery_date BETWEEN :start AND :end', { start, end })
+      .andWhere('alert.alertId IS NULL') // tareas sin notificaciones
+      .getMany();
+  }
+  //   async findByAlertRange(start: Date, end: Date) {
+  //   return await this.taskRepository.find({
+  //     where: { delivery_date: Between(start, end) },
+  //   });
+  // }
 
   async findOne(id: string): Promise<Task> {
     const task = await this.taskRepository.findOne({
@@ -102,11 +121,13 @@ export class TasksService {
     // Si se está actualizando la materia, verificar que existe
     if (updateTaskDto.subjectId && updateTaskDto.subjectId !== task.subjectId) {
       const subject = await this.subjectRepository.findOne({
-        where: { subjectId: updateTaskDto.subjectId }
+        where: { subjectId: updateTaskDto.subjectId },
       });
 
       if (!subject) {
-        throw new NotFoundException(`Subject with ID ${updateTaskDto.subjectId} not found`);
+        throw new NotFoundException(
+          `Subject with ID ${updateTaskDto.subjectId} not found`,
+        );
       }
 
       task.subject = subject;
@@ -115,11 +136,17 @@ export class TasksService {
 
     // Validar fechas si se están actualizando
     if (updateTaskDto.start_date || updateTaskDto.delivery_date) {
-      const startDate = updateTaskDto.start_date ? new Date(updateTaskDto.start_date) : new Date(task.start_date);
-      const deliveryDate = updateTaskDto.delivery_date ? new Date(updateTaskDto.delivery_date) : new Date(task.delivery_date);
-      
+      const startDate = updateTaskDto.start_date
+        ? new Date(updateTaskDto.start_date)
+        : new Date(task.start_date);
+      const deliveryDate = updateTaskDto.delivery_date
+        ? new Date(updateTaskDto.delivery_date)
+        : new Date(task.delivery_date);
+
       if (deliveryDate < startDate) {
-        throw new BadRequestException('Delivery date must be equal to or after start date');
+        throw new BadRequestException(
+          'Delivery date must be equal to or after start date',
+        );
       }
     }
 
@@ -132,7 +159,4 @@ export class TasksService {
     const task = await this.findOne(id);
     await this.taskRepository.remove(task);
   }
-
-  
-
 }

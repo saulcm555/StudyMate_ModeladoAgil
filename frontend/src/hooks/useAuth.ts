@@ -6,6 +6,7 @@ interface User {
   studentId: string;
   name: string;
   email: string;
+  role: 'Student' | 'Admin';
 }
 
 export const useAuth = () => {
