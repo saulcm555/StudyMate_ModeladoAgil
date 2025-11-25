@@ -1,6 +1,7 @@
-import { Home, BookOpen, CheckSquare, Calendar, Timer } from "lucide-react";
+import { Home, BookOpen, CheckSquare, Calendar, Timer, Users } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
 import {
   Sidebar,
@@ -22,9 +23,14 @@ const items = [
   { title: "Pomodoro", url: "/pomodoro", icon: Timer },
 ];
 
+const adminItems = [
+  { title: "Administrar Usuarios", url: "/admin/users", icon: Users },
+];
+
 export function AppSidebar() {
   const { open } = useSidebar();
   const location = useLocation();
+  const { user } = useAuth();
 
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border/50">
@@ -63,6 +69,30 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {/* Sección de administración - solo visible para admins */}
+        {user?.role === 'Admin' && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Administración</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {adminItems.map((item) => {
+                  const isActive = location.pathname === item.url;
+                  return (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton asChild isActive={isActive}>
+                        <NavLink to={item.url} end>
+                          <item.icon className="w-4 h-4" />
+                          <span>{item.title}</span>
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
     </Sidebar>
   );

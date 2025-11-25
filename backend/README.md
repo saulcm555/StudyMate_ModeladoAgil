@@ -31,6 +31,17 @@
 $ npm install
 ```
 
+## Default Admin User
+
+The application automatically creates a default admin user on first startup:
+
+**Email:** `admin@studymate.com`  
+**Password:** `Admin123!`
+
+⚠️ **Important:** Please change this password after your first login for security reasons.
+
+You can access the admin panel at: `/admin/users`
+
 ## Compile and run the project
 
 ```bash
