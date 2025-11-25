@@ -194,6 +194,7 @@ export default function AdminUsers() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>ID</TableHead>
                   <TableHead>Nombre</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Rol</TableHead>
@@ -205,13 +206,16 @@ export default function AdminUsers() {
               <TableBody>
                 {filteredUsers.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                       No se encontraron usuarios
                     </TableCell>
                   </TableRow>
                 ) : (
                   filteredUsers.map((user) => (
                     <TableRow key={user.studentId}>
+                      <TableCell className="font-mono text-xs text-muted-foreground">
+                        {user.studentId.slice(0, 8)}...
+                      </TableCell>
                       <TableCell className="font-medium">{user.name}</TableCell>
                       <TableCell>{user.email}</TableCell>
                       <TableCell>
@@ -338,21 +342,34 @@ function UserFormDialog({ open, onOpenChange, user, onSubmit }: UserFormDialogPr
     e.preventDefault();
     
     if (user) {
-      // Actualizar: no enviar password si está vacío
-      const updateData: UpdateUserDto = {
-        name: formData.name,
-        email: formData.email,
-        role: formData.role,
-        active: formData.active,
-      };
+      // Actualizar: solo enviar campos que han cambiado
+      const updateData: UpdateUserDto = {};
+      
+      if (formData.name && formData.name !== user.name) {
+        updateData.name = formData.name;
+      }
+      if (formData.email && formData.email !== user.email) {
+        updateData.email = formData.email;
+      }
+      if (formData.role !== user.role) {
+        updateData.role = formData.role;
+      }
+      if (formData.active !== user.active) {
+        updateData.active = formData.active;
+      }
       if (formData.password) {
         updateData.password = formData.password;
       }
+      
       onSubmit(updateData);
     } else {
       // Crear: password es requerido
       if (!formData.password || formData.password.length < 6) {
         alert("La contraseña debe tener al menos 6 caracteres");
+        return;
+      }
+      if (!formData.name || !formData.email) {
+        alert("Nombre y email son requeridos");
         return;
       }
       onSubmit({
@@ -387,7 +404,7 @@ function UserFormDialog({ open, onOpenChange, user, onSubmit }: UserFormDialogPr
                   setFormData({ ...formData, name: e.target.value })
                 }
                 placeholder="Nombre completo"
-                required
+                required={!user}
                 minLength={2}
               />
             </div>
@@ -401,7 +418,7 @@ function UserFormDialog({ open, onOpenChange, user, onSubmit }: UserFormDialogPr
                   setFormData({ ...formData, email: e.target.value })
                 }
                 placeholder="usuario@ejemplo.com"
-                required
+                required={!user}
               />
             </div>
             <div className="grid gap-2">
