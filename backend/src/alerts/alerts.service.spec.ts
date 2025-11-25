@@ -82,7 +82,7 @@ describe('AlertsService', () => {
       expect(mockRepository.insert).toHaveBeenCalledWith({
         task: mockTask,
         alertDate: expect.any(Date),
-        message: `The task "${mockTask.title}" is due in 2 days.`,
+        message: `The task "${mockTask.title}" is due in less than 2 days.`,
       });
     });
 
@@ -123,22 +123,6 @@ describe('AlertsService', () => {
       const result = await service.findAlertsByUserId('user-1');
 
       expect(result).toEqual([]);
-    });
-  });
-
-  describe('generateAlertForTask', () => {
-    it('debería generar alerta para una tarea específica', async () => {
-      mockRepository.insert.mockResolvedValue(undefined);
-
-      await service.generateAlertForTask(mockTask as any);
-
-      expect(mockRepository.insert).toHaveBeenCalledWith(
-        expect.objectContaining({
-          task: mockTask,
-          message: `The task "${mockTask.title}" is due in 2 days.`,
-        })
-      );
-      expect(mockRepository.insert).toHaveBeenCalledTimes(1);
     });
   });
 });

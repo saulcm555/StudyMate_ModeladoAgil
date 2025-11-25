@@ -55,7 +55,7 @@ describe('TasksService', () => {
   };
 
   const mockAlertsService = {
-    generateAlertForTask: jest.fn(),
+    generateAlerts: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -111,7 +111,7 @@ describe('TasksService', () => {
       mockSubjectRepository.findOne.mockResolvedValue(mockSubject);
       mockTaskRepository.create.mockReturnValue(mockTask);
       mockTaskRepository.save.mockResolvedValue(mockTask);
-      mockAlertsService.generateAlertForTask.mockResolvedValue(undefined);
+      mockAlertsService.generateAlerts.mockResolvedValue(undefined);
 
       const result = await service.create(createTaskDto);
 
@@ -120,7 +120,7 @@ describe('TasksService', () => {
       });
       expect(mockTaskRepository.create).toHaveBeenCalled();
       expect(mockTaskRepository.save).toHaveBeenCalled();
-      expect(mockAlertsService.generateAlertForTask).toHaveBeenCalledWith(mockTask);
+      expect(mockAlertsService.generateAlerts).toHaveBeenCalled();
       expect(result).toEqual(mockTask);
     });
 
