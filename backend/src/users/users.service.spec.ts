@@ -19,6 +19,10 @@ describe('UsersService', () => {
     name: 'John Doe',
     email: 'john@example.com',
     password: 'hashedPassword',
+    role: 'student',
+    active: true,
+    createdAt: new Date(),
+    subjects: [],
   };
 
   const mockRepository = {

@@ -33,6 +33,7 @@ describe('SubjectsService', () => {
     ],
     color: '#FF5733',
     student: mockStudent,
+    tasks: [],
   };
 
   const mockRepository = {
@@ -126,6 +127,7 @@ describe('SubjectsService', () => {
         subjectId: 'subject-2',
         name: 'Chemistry',
         schedule: [{ day: 'Monday', start: '09:00', end: '11:00' }],
+        tasks: [],
       };
 
       mockUsersService.findOne.mockResolvedValue(mockStudent);
@@ -233,6 +235,7 @@ describe('SubjectsService', () => {
         subjectId: 'subject-2',
         name: 'Chemistry',
         schedule: [{ day: 'Monday', start: '09:00', end: '11:00' }],
+        tasks: [],
       };
 
       mockRepository.findOne

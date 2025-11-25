@@ -30,12 +30,16 @@ describe('TasksService', () => {
     task_id: '1',
     title: 'Test Task',
     description: 'Test Description',
+    notes: null,
     start_date: new Date('2024-12-01'),
     delivery_date: new Date('2024-12-15'),
     priority: TaskPriority.HIGH,
     state: TaskState.PENDING,
     subject: mockSubject,
     subjectId: 'subject-1',
+    alerts: [],
+    attachments: [],
+    pomodoroSessions: [],
   };
 
   const mockTaskRepository = {
