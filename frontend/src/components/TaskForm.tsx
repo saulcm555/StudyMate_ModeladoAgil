@@ -21,6 +21,7 @@ import {
 import type { Task, CreateTaskDto, TaskState, TaskPriority } from "@/services/tasks.service";
 import { TaskState as TaskStateEnum, TaskPriority as TaskPriorityEnum } from "@/services/tasks.service";
 import { useSubjects } from "@/hooks/useSubjects";
+import { formatDateForInput, formatDateForSubmit, getTodayFormatted } from "@/utils/dateUtils";
 
 interface TaskFormProps {
   open: boolean;
@@ -66,20 +67,22 @@ export function TaskForm({ open, onOpenChange, onSubmit, task, isLoading }: Task
           description: task.description,
           notes: task.notes || "",
           subjectId: task.subjectId || task.subject?.subjectId || "",
-          start_date: task.start_date.split('T')[0],
-          delivery_date: task.delivery_date.split('T')[0],
+          start_date: formatDateForInput(task.start_date),
+          delivery_date: formatDateForInput(task.delivery_date),
           priority: task.priority,
           state: task.state,
         });
       } else {
         // Modo creación: resetear a valores por defecto
+        const todayFormatted = getTodayFormatted();
+        
         reset({
           title: "",
           description: "",
           notes: "",
           subjectId: "",
-          start_date: new Date().toISOString().split('T')[0],
-          delivery_date: new Date().toISOString().split('T')[0],
+          start_date: todayFormatted,
+          delivery_date: todayFormatted,
           priority: TaskPriorityEnum.MEDIUM,
           state: TaskStateEnum.PENDING,
         });
@@ -88,11 +91,12 @@ export function TaskForm({ open, onOpenChange, onSubmit, task, isLoading }: Task
   }, [open, task, reset]);
 
   const handleFormSubmit = (data: CreateTaskDto) => {
-    // Agregar la hora para evitar problemas de zona horaria
+    // Agregar la hora del mediodía para evitar problemas de zona horaria
+    // Al usar 12:00:00 en lugar de 00:00:00, evitamos que la conversión a UTC cambie el día
     const submitData = {
       ...data,
-      start_date: data.start_date + 'T00:00:00',
-      delivery_date: data.delivery_date + 'T00:00:00',
+      start_date: formatDateForSubmit(data.start_date),
+      delivery_date: formatDateForSubmit(data.delivery_date),
     };
     onSubmit(submitData);
   };
