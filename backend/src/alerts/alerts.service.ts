@@ -26,7 +26,7 @@ export class AlertsService {
 
   async generateAlerts() {
     const alertDayStart = dayjs().startOf('day').toDate();
-    const alertDayEnd = dayjs().add(2, 'day').endOf('day').toDate();
+    const alertDayEnd = dayjs().add(5, 'day').endOf('day').toDate();
 
     const tasks = await this.tasksService.findByAlertRange(
       alertDayStart,
@@ -38,18 +38,65 @@ export class AlertsService {
     }
 
     for (const task of tasks) {
-      await this.alertsRepository.insert({
-        task: task,
-        alertDate: alertDayStart,
-        message: `The task "${task.title}" is due in less than 2 days.`,
-      });
-      this.logger.log(`Notification created for task ${task.title}`);
+      const deliveryDate = dayjs(task.delivery_date);
+      const today = dayjs().startOf('day');
+      const daysUntilDue = deliveryDate.diff(today, 'day');
+
+      // Crear alertas para 5, 3 y 1 días antes
+      const alertDays = [5, 3, 1];
+      
+      for (const daysBefore of alertDays) {
+        if (daysUntilDue === daysBefore) {
+          // Verificar si ya existe una alerta para este día
+          const existingAlert = await this.alertsRepository.findOne({
+            where: {
+              task: { task_id: task.task_id },
+              alertDate: today.toDate(),
+            },
+          });
+
+          if (!existingAlert) {
+            await this.alertsRepository.insert({
+              task: task,
+              alertDate: today.toDate(),
+              message: `La tarea "${task.title}" vence en ${daysBefore} ${daysBefore === 1 ? 'día' : 'días'}.`,
+            });
+            this.logger.log(`Alerta creada para tarea ${task.title} (${daysBefore} días antes)`);
+          }
+        }
+      }
     }
   }
 
   findAlertsByUserId(userId: string) {
     return this.alertsRepository.find({
       where: { task: { subject: { student: { studentId: userId } } } },
+      relations: ['task', 'task.subject'],
+      order: { alertDate: 'DESC' },
     });
+  }
+
+  async generateAlertForTask(task: any) {
+    const deliveryDate = dayjs(task.delivery_date);
+    const today = dayjs().startOf('day');
+    
+    // Crear alertas para 5, 3 y 1 días antes de la fecha de entrega
+    const alertDays = [5, 3, 1];
+
+    for (const daysBefore of alertDays) {
+      const alertDate = deliveryDate.subtract(daysBefore, 'day').startOf('day');
+      
+      // Solo crear alertas para fechas futuras
+      if (alertDate.isAfter(today) || alertDate.isSame(today)) {
+        const alert = this.alertsRepository.create({
+          task: task,
+          alertDate: alertDate.toDate(),
+          message: `La tarea "${task.title}" vence en ${daysBefore} ${daysBefore === 1 ? 'día' : 'días'}.`,
+        });
+        
+        await this.alertsRepository.save(alert);
+        this.logger.log(`Alerta creada para tarea ${task.title} (${daysBefore} días antes)`);
+      }
+    }
   }
 }

@@ -3,6 +3,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { Button } from "@/components/ui/button";
 import { LogOut, User, ChevronDown } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { NotificationBell } from "@/components/NotificationBell";
 import { useState } from "react";
 import type { ReactNode } from "react";
 
@@ -18,6 +19,13 @@ export function Layout({ children }: { children: ReactNode }) {
           <header className="h-16 border-b border-border/50 bg-card/80 backdrop-blur-xl flex items-center px-6 sticky top-0 z-10 shadow-sm">
             <SidebarTrigger className="mr-4 hover:bg-muted rounded-lg" />
             <div className="flex-1" />
+            
+            {/* Notification Bell */}
+            {user && (
+              <div className="mr-3">
+                <NotificationBell />
+              </div>
+            )}
             
             {/* User Menu */}
             {user && (
