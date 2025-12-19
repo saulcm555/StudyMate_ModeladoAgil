@@ -18,7 +18,7 @@ const Index = () => {
   const features = [
     {
       icon: BookOpen,
-      title: "Organiza tus Materias",
+      title: "Organizador de tus Materias",
       description: "Registra todas tus materias del semestre en un solo lugar"
     },
     {
