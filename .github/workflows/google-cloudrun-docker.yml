@@ -38,10 +38,10 @@ jobs:
         run: |
           gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
 
-      - name: Build and Push Image
+      - name: Build and Push Image (backend/Dockerfile)
         run: |
           IMAGE="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_REPOSITORY }}/${{ env.SERVICE }}:${{ github.sha }}"
-          docker build -t "$IMAGE" .
+          docker build -t "$IMAGE" -f backend/Dockerfile backend
           docker push "$IMAGE"
           echo "IMAGE=$IMAGE" >> $GITHUB_ENV
 
@@ -55,4 +55,3 @@ jobs:
 
       - name: Show URL
         run: echo "${{ steps.deploy.outputs.url }}"
-
