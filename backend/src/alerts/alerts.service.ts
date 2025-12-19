@@ -5,6 +5,8 @@ import { Alert } from './entities/alert.entity';
 import { TasksService } from '../tasks/tasks.service';
 import dayjs from 'dayjs';
 import { InjectRepository } from '@nestjs/typeorm';
+import { AlertFactory } from './factories/alert-factory';
+import { Task } from '../tasks/entities/task.entity';
 
 @Injectable()
 export class AlertsService {
@@ -16,6 +18,8 @@ export class AlertsService {
 
     @Inject(forwardRef(() => TasksService))
     private readonly tasksService: TasksService,
+
+    private readonly alertFactory: AlertFactory,
   ) {}
 
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
@@ -57,14 +61,19 @@ export class AlertsService {
           .getOne();
 
         if (!existingAlert) {
+          // Usar AlertFactory para generar los datos de la alerta
+          const alertData = this.alertFactory.createAlert(task, daysUntilDue);
+          
           const newAlert = this.alertsRepository.create({
             task: task,
             alertDate: today.toDate(),
-            message: `La tarea "${task.title}" vence en ${daysUntilDue} ${daysUntilDue === 1 ? 'día' : 'días'}.`,
+            message: alertData.message,
+            alertType: alertData.alertType,
+            severity: alertData.severity,
           });
           
           await this.alertsRepository.save(newAlert);
-          this.logger.log(`✓ Alerta creada para tarea ${task.title} (${daysUntilDue} días restantes)`);
+          this.logger.log(`✓ Alerta creada para tarea ${task.title} (${daysUntilDue} días restantes) - Tipo: ${alertData.alertType}`);
         } else {
           this.logger.log(`Alerta ya existe para tarea ${task.title}`);
         }
@@ -80,7 +89,7 @@ export class AlertsService {
     });
   }
 
-  async generateAlertForTask(task: any) {
+  async generateAlertForTask(task: Task) {
     const deliveryDate = dayjs(task.delivery_date).startOf('day');
     const today = dayjs().startOf('day');
     
