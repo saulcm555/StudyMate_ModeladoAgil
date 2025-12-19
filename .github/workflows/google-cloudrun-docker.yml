@@ -1,4 +1,4 @@
-name: Build and Deploy to Cloud Run
+name: Deploy Backend + Frontend to Cloud Run
 
 on:
   push:
@@ -8,10 +8,13 @@ on:
 env:
   PROJECT_ID: sound-yew-478516-c3
   REGION: northamerica-south1
-  SERVICE: studymate-backend
   GAR_REPOSITORY: cloud-run-source-deploy
+
   WORKLOAD_IDENTITY_PROVIDER: projects/275736197450/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider
   SERVICE_ACCOUNT: github-actions-deployer@sound-yew-478516-c3.iam.gserviceaccount.com
+
+  BACKEND_SERVICE: studymate-backend
+  FRONTEND_SERVICE: studymate-front
 
 jobs:
   deploy:
@@ -35,23 +38,45 @@ jobs:
         uses: google-github-actions/setup-gcloud@v2
 
       - name: Configure Docker for Artifact Registry
-        run: |
-          gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
 
-      - name: Build and Push Image (backend/Dockerfile)
+      # --------------------
+      # Build + Push BACKEND
+      # --------------------
+      - name: Build and Push Backend Image
         run: |
-          IMAGE="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_REPOSITORY }}/${{ env.SERVICE }}:${{ github.sha }}"
-          docker build -t "$IMAGE" -f backend/Dockerfile backend
-          docker push "$IMAGE"
-          echo "IMAGE=$IMAGE" >> $GITHUB_ENV
+          BACKEND_IMAGE="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_REPOSITORY }}/${{ env.BACKEND_SERVICE }}:${{ github.sha }}"
+          docker build -t "$BACKEND_IMAGE" -f backend/Dockerfile backend
+          docker push "$BACKEND_IMAGE"
+          echo "BACKEND_IMAGE=$BACKEND_IMAGE" >> $GITHUB_ENV
 
-      - id: deploy
-        name: Deploy to Cloud Run
+      - id: deploy-backend
+        name: Deploy Backend to Cloud Run
         uses: google-github-actions/deploy-cloudrun@v2
         with:
-          service: ${{ env.SERVICE }}
+          service: ${{ env.BACKEND_SERVICE }}
           region: ${{ env.REGION }}
-          image: ${{ env.IMAGE }}
+          image: ${{ env.BACKEND_IMAGE }}
 
-      - name: Show URL
-        run: echo "${{ steps.deploy.outputs.url }}"
+      # ---------------------
+      # Build + Push FRONTEND
+      # ---------------------
+      - name: Build and Push Frontend Image
+        run: |
+          FRONTEND_IMAGE="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_REPOSITORY }}/${{ env.FRONTEND_SERVICE }}:${{ github.sha }}"
+          docker build -t "$FRONTEND_IMAGE" -f frontend/Dockerfile frontend
+          docker push "$FRONTEND_IMAGE"
+          echo "FRONTEND_IMAGE=$FRONTEND_IMAGE" >> $GITHUB_ENV
+
+      - id: deploy-frontend
+        name: Deploy Frontend to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ env.FRONTEND_SERVICE }}
+          region: ${{ env.REGION }}
+          image: ${{ env.FRONTEND_IMAGE }}
+
+      - name: Show URLs
+        run: |
+          echo "Backend URL:  ${{ steps.deploy-backend.outputs.url }}"
+          echo "Frontend URL: ${{ steps.deploy-frontend.outputs.url }}"
